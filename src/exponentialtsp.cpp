@@ -1,5 +1,6 @@
 #include "cplex_utils.h"
 #include "exptsp_callbacks.h"
+#include <iostream>
 
 int counting_descendent(IloEnv &env, IloCplex &model, IloArray<IloBoolVarArray> &x, int numVertices, int start = 0) {
     int atual = start, cc = 0;

@@ -2,21 +2,33 @@
 #define CPLEX_UTILS_H
 
 
-#define CPLEX_MUTE_GLOBAL 1
+#define CPLEX_MUTE_GLOBAL_ALL 2
+#define CPLEX_MUTE_GLOBAL_WARNINGSONLY 1
+#define CPLEX_MUTE_GLOBAL_NONE 0
+
+#define CPLEX_MUTE_GLOBAL CPLEX_MUTE_GLOBAL_WARNINGSONLY
 
 
 
 
+#if CPLEX_MUTE_GLOBAL == CPLEX_MUTE_GLOBAL_NONE
+#define IL_STD 1
+#include <ilcplex/ilocplex.h>
+#define CPLEX_MUTE( cplex )
 
-#ifndef CPLEX_MUTE_GLOBAL
-#define CPLEX_MUTE( cplex ) 
-#else
+
+
+#elif CPLEX_MUTE_GLOBAL == CPLEX_MUTE_GLOBAL_WARNINGSONLY
+#define IL_STD 1
+#include <ilcplex/ilocplex.h>
 
 #define CPLEX_MUTE( cplex ) {\
-	cplex.setWarning( env.getNullStream() ); \
     cplex.setOut( env.getNullStream() ); \
 }
 
+
+
+#elif CPLEX_MUTE_GLOBAL == CPLEX_MUTE_GLOBAL_ALL
 //-Wignored-attributes
 // save diagnostic state
 #pragma GCC diagnostic push
@@ -30,6 +42,12 @@
 
 // turn the warnings back on
 #pragma GCC diagnostic pop
+
+
+#define CPLEX_MUTE( cplex ) {\
+	cplex.setWarning( env.getNullStream() ); \
+    cplex.setOut( env.getNullStream() ); \
+}
 
 #endif
 
