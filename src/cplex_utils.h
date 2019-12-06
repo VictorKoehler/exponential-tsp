@@ -1,9 +1,25 @@
 #ifndef CPLEX_UTILS_H
 #define CPLEX_UTILS_H
 
+
+#define CPLEX_MUTE_GLOBAL 1
+
+
+
+
+
+#ifndef CPLEX_MUTE_GLOBAL
+#define CPLEX_MUTE( cplex ) 
+#else
+
+#define CPLEX_MUTE( cplex ) {\
+	cplex.setWarning( env.getNullStream() ); \
+    cplex.setOut( env.getNullStream() ); \
+}
+
 //-Wignored-attributes
 // save diagnostic state
-#pragma GCC diagnostic push 
+#pragma GCC diagnostic push
 
 //#pragma GCC diagnostic ignored "-Wignored-attributes"
 //#pragma GCC diagnostic ignored "-Wall"
@@ -14,6 +30,10 @@
 
 // turn the warnings back on
 #pragma GCC diagnostic pop
+
+#endif
+
+
 
 
 typedef enum __cut_policy { NO_CUTS, ONLY_ROOT_CUTS, FULL_CUTS } cut_policy;
@@ -120,13 +140,6 @@ typedef enum __cut_policy { NO_CUTS, ONLY_ROOT_CUTS, FULL_CUTS } cut_policy;
 		} \
 	} \
 }
-
-
-#define CPLEX_MUTE( cplex ) {\
-	cplex.setWarning( env.getNullStream() ); \
-    cplex.setOut( env.getNullStream() ); \
-}
-
 
 
 #endif
