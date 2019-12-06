@@ -2,21 +2,24 @@
 #include "exptsp_callbacks.h"
 #include <iostream>
 
-int counting_descendent(IloEnv &env, IloCplex &model, IloArray<IloBoolVarArray> &x, int numVertices, int start = 0) {
+int counting_descendent(IloEnv &env, IloCplex &model, IloArray<IloBoolVarArray> &x, int numVertices, double **mdist, int start = 0) {
     int atual = start, cc = 0;
+    //std::cout << "SEQUENCE:";
+    bool visited[numVertices]={false};
     do {
-        // std::cout << atual << " ";
+        if (visited[atual]) std::cout << " " << atual << "!!!";
+        visited[atual] = true;
         IloNumArray X_(env, numVertices);
         model.getValues(X_, x[atual]);
         for (int i = 0; i < numVertices; i++) {
             if (X_[i] >= 0.98) {
+                //std::cout << " " << atual << "->" << i << "(" << mdist[atual][i] << ")";
                 atual = i;
                 cc++;
-                break;
             }
         }
     } while (atual != start);
-    // std::cout << std::endl;
+    //std::cout << std::endl;
     return cc;
 }
 
@@ -91,7 +94,7 @@ double exponential_tsp(int numVertices, double **mdist) {
     IloCplex exptspModel(modelo);
     exptspModel.use(CYCLELC_SIMPLE(env, x, numVertices));
     exptspModel.exportModel("results/exptsp.lp");
-    exptspModel.setParam(IloCplex::TiLim,60*30);
+    exptspModel.setParam(IloCplex::TiLim,60*10);
 
     IloNum startTime;
     startTime = exptspModel.getTime();
@@ -100,7 +103,7 @@ double exponential_tsp(int numVertices, double **mdist) {
     std::cout << "BEST: " <<  exptspModel.getBestObjValue() << std::endl;
     std::cout << "OBJ VALUE: " <<  exptspModel.getObjValue() << std::endl;
     std::cout << "STATUS: " <<  exptspModel.getCplexStatus() << std::endl;
-    std::cout << "VISITED: " <<  counting_descendent(env, exptspModel, x, numVertices) << std::endl;
+    std::cout << "VISITED: " <<  counting_descendent(env, exptspModel, x, numVertices, mdist) << std::endl;
     std::cout << "TIME ELAPSED: " << (exptspModel.getTime()-startTime) << std::endl << std::endl << "-----" << std::endl;
 
     double thereturnis = exptspModel.getBestObjValue();

@@ -16,9 +16,28 @@ std::string CurrentDate()
 double ** matrizAdj; // matriz de adjacencia
 int dimension; // quantidade total de vertices
 
+void printData() {
+    std::cout << "dimension: " << dimension << std::endl;
+    for (size_t i = 0; i < dimension; i++) {
+        for (size_t j = 0; j < dimension; j++) {
+            std::cout << matrizAdj[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+void fixTheGodamnData() {
+    for (size_t i = 0; i < dimension; i++) {
+        for (size_t j = 0; j < dimension; j++) {
+            matrizAdj[i][j] = matrizAdj[i+1][j+1];
+        }
+    }
+}
+
 int main(int argc, char** argv) {
     std::cout << CurrentDate() << std::endl;
     readData(argc, argv, &dimension, &matrizAdj);
+    fixTheGodamnData();
     exponential_tsp(dimension, matrizAdj);
     return 0;
 }
