@@ -92,7 +92,7 @@ double exponential_tsp(int numVertices, double **mdist) {
 
     // Let the games begin
     IloCplex exptspModel(modelo);
-    exptspModel.use(CYCLELC_SIMPLE(env, x, numVertices));
+    exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices));
     exptspModel.exportModel("results/exptsp.lp");
     exptspModel.setParam(IloCplex::TiLim,60*10);
 

@@ -85,7 +85,7 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
         // Para cada ciclo encontrado.
         int atual = start, vert_cc = 0;
         IloExpr subCycle(getEnv());
-        //std::cout << std::endl << "Imposing:";
+        // std::cout << std::endl << "Imposing:";
         std::vector<int> subcycle_vertexs;
 
         do {
@@ -96,13 +96,14 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
             for (int i = 0; i < numVertices; i++) {
                 if (X_[i] >= 0.98 && i != atual) {
 
-                    if (i != start || vert_cc != 1) { // ANTI-BUG
+                    if (i != start) { // ANTI-BUG
                         for (int m : subcycle_vertexs) {
                             subCycle += x[m][i]; // Restrições Simples: Elimina o ciclo da vez,
                             subCycle += x[i][m]; // mas não todos os ciclos possíveis do conjunto.
-                            // std::cout << " " << atual << ":" << i;
+                            // std::cout << " " << i << ":" << m;
                         }
                     }
+                    // std::cout << ".(" << start << "," << i << ")";
 
                     vert_cc++; // Incrementa o contador
                     visited[i] = true; // Marca como visitado.
@@ -128,5 +129,5 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
             }
         }
     }
-    //std::cout << std::endl << "----" << std::endl;
+    // std::cout << std::endl << "----" << std::endl;
 }
