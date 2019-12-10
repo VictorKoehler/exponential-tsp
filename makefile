@@ -23,11 +23,11 @@ LIBFORMAT = static_pic
 
 ####diretorios com as libs do cplex
 ifeq ($(CPLEX_VERSION), 12.4)
-   CPLEXDIR  = /opt/cplex/cplex
-   CONCERTDIR = /opt/cplex/concert
+   CPLEXDIR  = /opt/ibm/ILOG/CPLEX_Studio128/cplex/
+   CONCERTDIR = /opt/ibm/ILOG/CPLEX_Studio128/concert/
 else
-   CPLEXDIR  = /opt/cplex/cplex
-   CONCERTDIR = /opt/cplex/concert
+   CPLEXDIR  = /opt/ibm/ILOG/CPLEX_Studio128/cplex/
+   CONCERTDIR = /opt/ibm/ILOG/CPLEX_Studio128/concert/
 endif
    
 CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)

@@ -29,7 +29,7 @@ double exponential_tsp(int numVertices, double **mdist) {
 
     // Criando um modelo
     IloModel modelo(env);
-    CPLEX_MUTE(env);
+    // CPLEX_MUTE(env);
 
 
 

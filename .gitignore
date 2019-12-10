@@ -32,5 +32,4 @@
 *.app
 
 obj/
-instances/
 results/
