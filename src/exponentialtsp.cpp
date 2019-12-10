@@ -94,7 +94,7 @@ double exponential_tsp(int numVertices, double **mdist) {
     IloCplex exptspModel(modelo);
     exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices));
     exptspModel.exportModel("results/exptsp.lp");
-    exptspModel.setParam(IloCplex::TiLim,60*10);
+    exptspModel.setParam(IloCplex::TiLim,60*60);
 
     IloNum startTime;
     startTime = exptspModel.getTime();
