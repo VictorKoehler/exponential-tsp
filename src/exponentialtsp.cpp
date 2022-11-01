@@ -1,5 +1,6 @@
 #include "cplex_utils.h"
 #include "exptsp_callbacks.h"
+#include "cutstsp_callbacks.h"
 #include <iostream>
 #include <cassert>
 
@@ -126,7 +127,7 @@ double exponential_tsp(int numVertices, double **mdist) {
 
 
 
-double exponential_tsp_edges(int numVertices, double **mdist) {
+double exponential_tsp_edges(int numVertices, double **mdist, bool stoer_wagner) {
     // const auto t = 2.1, u = 2.2, v=3.1;
     // std::vector<std::vector<double>> arr = {
     //     {0, 2, 0, 0, 3, 0, 0, 0}, // 1
@@ -207,6 +208,7 @@ double exponential_tsp_edges(int numVertices, double **mdist) {
     // Let the games begin
     IloCplex exptspModel(modelo);
     exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices, true));
+    if (stoer_wagner) exptspModel.use(MINCUTTSPCALLBACK(env, x));
     exptspModel.exportModel("results/exptsp.lp");
     exptspModel.setParam(IloCplex::TiLim,60*10);
 

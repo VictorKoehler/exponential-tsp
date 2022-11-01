@@ -37,16 +37,17 @@ void fixTheGodamnData() {
 int main(int argc, char** argv) {
     std::cout << CurrentDate() << std::endl;
     if (argc != 3 || std::string(argv[1]) == "-h" || std::string(argv[2]) == "-h") {
-        std::cout << "Usage: " << argv[0] << " <e[dges]|a[rcs]> <input name>\n";
+        std::cout << "Usage: " << argv[0] << " <e[dges]|s[toerwagner]|a[rcs]> <input name>\n";
         std::cout << "  Strategies:\n";
         std::cout << "      e[dges]: Uses symmetric formulation\n";
+        std::cout << "      s[toerwagner]: Uses symmetric formulation with cuts provided by Stoer-Wagner algorithm\n";
         std::cout << "      a[acs]: Uses assymmetric formulation\n";
         exit(1);
     }
     readData(argv[2], &dimension, &matrizAdj);
     fixTheGodamnData();
     if (argv[1][0] == 'a') exponential_tsp(dimension, matrizAdj);
-    else exponential_tsp_edges(dimension, matrizAdj);
+    else exponential_tsp_edges(dimension, matrizAdj, argv[1][0] == 's');
     std::cout << CurrentDate() << std::endl;
     return 0;
 }
