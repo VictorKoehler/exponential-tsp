@@ -1,3 +1,6 @@
+#ifndef EXPTSP_CALLBACK_H_
+#define EXPTSP_CALLBACK_H_
+
 #include "cplex_utils.h"
 #include <vector>
 
@@ -10,7 +13,7 @@
  * mas não todos os ciclos possíveis com esses vértices. Ainda assim o algoritmo garante a
  * otimalidade, já que a Lazy sempre detecta ciclos e elimina-os.
  */
-ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_SIMPLE, IloArray<IloBoolVarArray> &, x, int, numVertices)
+ILOLAZYCONSTRAINTCALLBACK3(CYCLELC_SIMPLE, IloArray<IloBoolVarArray> &, x, int, numVertices, const bool, edges)
 {
     bool visited[numVertices] = {false};
     int start = 0, cycles_cc = 0;
@@ -19,7 +22,7 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_SIMPLE, IloArray<IloBoolVarArray> &, x, int, 
     while (cycles_cc != numVertices) {
 
         // Para cada ciclo encontrado.
-        int atual = start, vert_cc = 0;
+        int atual = start, vert_cc = 0, anterior=-1;
         IloExpr subCycle(getEnv());
         //std::cout << std::endl << "Imposing:";
 
@@ -28,16 +31,18 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_SIMPLE, IloArray<IloBoolVarArray> &, x, int, 
             getValues(X_, x[atual]); // copia o array de fluxos (x)
 
             for (int i = 0; i < numVertices; i++) {
+                if (edges && anterior == i) continue;
                 if (X_[i] >= 0.98 && i != atual) {
 
                     if (i != start || vert_cc != 1) { // ANTI-BUG
                         subCycle += x[atual][i]; // Restrições Simples: Elimina o ciclo da vez,
-                        subCycle += x[i][atual]; // mas não todos os ciclos possíveis do conjunto.
+                        if (!edges) subCycle += x[i][atual]; // mas não todos os ciclos possíveis do conjunto.
                         // std::cout << " " << atual << ":" << i;
                     }
 
                     vert_cc++; // Incrementa o contador
                     visited[i] = true; // Marca como visitado.
+                    anterior = atual;
                     atual = i; // Passa para o próximo vértice.
                     break;
                 }
@@ -74,7 +79,7 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_SIMPLE, IloArray<IloBoolVarArray> &, x, int, 
  * Essa é a restrição completa como descrita no algoritmo clássico.
  * Isto é, a restrição impede que quaisquer ciclos no conjunto dos vértices de C seja formando.
  */
-ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, int, numVertices)
+ILOLAZYCONSTRAINTCALLBACK3(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, int, numVertices, const bool, edges)
 {
     bool visited[numVertices] = {false};
     int start = 0, cycles_cc = 0;
@@ -83,7 +88,7 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
     while (cycles_cc != numVertices) {
 
         // Para cada ciclo encontrado.
-        int atual = start, vert_cc = 0;
+        int atual = start, vert_cc = 0, anterior=-1;
         IloExpr subCycle(getEnv());
         // std::cout << std::endl << "Imposing:";
         std::vector<int> subcycle_vertexs;
@@ -94,12 +99,13 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
             subcycle_vertexs.push_back(atual);
 
             for (int i = 0; i < numVertices; i++) {
+                if (edges && anterior == i) continue;
                 if (X_[i] >= 0.98 && i != atual) {
 
                     if (i != start) { // ANTI-BUG
                         for (int m : subcycle_vertexs) {
-                            subCycle += x[m][i]; // Restrições Simples: Elimina o ciclo da vez,
-                            subCycle += x[i][m]; // mas não todos os ciclos possíveis do conjunto.
+                            subCycle += x[m][i]; // Restrições Completas: Elimina o ciclo da vez,
+                            if (!edges) subCycle += x[i][m]; // e todos os ciclos desse subconjunto de vértices
                             // std::cout << " " << i << ":" << m;
                         }
                     }
@@ -107,6 +113,7 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
 
                     vert_cc++; // Incrementa o contador
                     visited[i] = true; // Marca como visitado.
+                    anterior = atual;
                     atual = i; // Passa para o próximo vértice.
                     break;
                 }
@@ -131,3 +138,5 @@ ILOLAZYCONSTRAINTCALLBACK2(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
     }
     // std::cout << std::endl << "----" << std::endl;
 }
+
+#endif
