@@ -59,7 +59,15 @@ CCLNFLAGS = -L$(CPLEXLIBDIR) -L$(CONCERTLIBDIR) $(CCOPTFLAGS) -lm -lpthread -lco
 
 #### diretorios com os source files e com os objs files
 SRCDIR = src
-OBJDIR = obj
+ifdef $(OBJDIR)
+   OBJDIR = $(OBJDIR)
+else
+   ifeq ($(DEBUG), 1)
+      OBJDIR = obj/debug
+   else
+      OBJDIR = obj
+   endif
+endif
 #############################
 
 #### lista de todos os srcs e todos os objs

@@ -127,22 +127,8 @@ double exponential_tsp(int numVertices, double **mdist) {
 
 
 
-double exponential_tsp_edges(int numVertices, double **mdist, bool stoer_wagner) {
-    // const auto t = 2.1, u = 2.2, v=3.1;
-    // std::vector<std::vector<double>> arr = {
-    //     {0, 2, 0, 0, 3, 0, 0, 0}, // 1
-    //     {2, 0, 3, 0, 2, t, 0, 0}, // 2
-    //     {0, 3, 0, 4, 0, 0, u, 0}, // 3
-    //     {0, 0, 4, 0, 0, 0, 2, 2}, // 4
-    //     {3, 2, 0, 0, 0, v, 0, 0}, // 5
-    //     {0, t, 0, 0, v, 0, 1, 0}, // 6
-    //     {0, 0, u, 2, 0, 1, 0, 3}, // 7
-    //     {0, 0, 0, 2, 0, 0, 3, 0}  // 8
-    // };
-    // mincut(arr);
-    // exit(1);
-    
-    std::cout << "EDGES\n";
+double exponential_tsp_edges(int numVertices, double **mdist, bool stoer_wagner_cut, bool maxback_cut) {
+    std::cout << "EDGES " << stoer_wagner_cut << maxback_cut <<"\n";
     // Ambiente
     IloEnv env;
 
@@ -208,7 +194,7 @@ double exponential_tsp_edges(int numVertices, double **mdist, bool stoer_wagner)
     // Let the games begin
     IloCplex exptspModel(modelo);
     exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices, true));
-    if (stoer_wagner) exptspModel.use(MINCUTTSPCALLBACK(env, x));
+    if (stoer_wagner_cut || maxback_cut) exptspModel.use(MINCUTTSPCALLBACK(env, x, stoer_wagner_cut, maxback_cut, 8));
     exptspModel.exportModel("results/exptsp.lp");
     exptspModel.setParam(IloCplex::TiLim,60*10);
 
@@ -216,9 +202,9 @@ double exponential_tsp_edges(int numVertices, double **mdist, bool stoer_wagner)
     startTime = exptspModel.getTime();
     exptspModel.solve();
 
+    std::cout << "STATUS: " <<  exptspModel.getCplexStatus() << std::endl;
     std::cout << "BEST: " <<  exptspModel.getBestObjValue() << std::endl;
     std::cout << "OBJ VALUE: " <<  exptspModel.getObjValue() << std::endl;
-    std::cout << "STATUS: " <<  exptspModel.getCplexStatus() << std::endl;
     std::cout << "VISITED: " <<  counting_descendent<true>(env, exptspModel, x, numVertices, mdist) << std::endl;
     std::cout << "TIME ELAPSED: " << (exptspModel.getTime()-startTime) << std::endl << std::endl << "-----" << std::endl;
 
