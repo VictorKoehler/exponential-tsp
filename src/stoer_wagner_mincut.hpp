@@ -7,7 +7,6 @@
 #include <vector>
 #include <list>
 #include "utils.hpp"
-#include "cplex_utils.h"
 
 template<typename T>
 GraphPartition stoer_wagner_mincut(T& X_) {
@@ -17,9 +16,13 @@ GraphPartition stoer_wagner_mincut(T& X_) {
     struct heap_data {
         fibohandle handle;
         double value;
-        IloInt index;
+        int index;
 
-        heap_data(double p, IloInt i) : value(p), index(i) {}
+        heap_data(double p, int i) : value(p), index(i) {}
+
+        // ~heap_data() {
+        //     std::cout << "Deallocating heap_data of index " << index << " value " << value << " and handle " << &handle << std::endl; 
+        // }
 
         bool operator<(heap_data const & rhs) const {
             return value < rhs.value;
@@ -35,55 +38,61 @@ GraphPartition stoer_wagner_mincut(T& X_) {
 
     for (int iter = 1; iter < numVertices; iter++) {
         fibonacci_heap<heap_data> q;
-        std::list<fibohandle> handles;
+        std::list<std::pair<int, fibohandle>> handles;
         
-        for(IloInt i = 1; i < numVertices; i++) {
+        for(int i = 1; i < numVertices; i++) {
             if (group[i] == i) {
-                handles.push_back(q.emplace(X_[1][i], i));
-                (*handles.back()).handle = handles.back();
+                handles.emplace_back(i, q.emplace(X_[0][i], i));
+                (*handles.back().second).handle = handles.back().second;
             }
         }
 
-        IloInt g;
+        int g;
         while (q.size() > 2) {
             const auto& g_h = q.top();
             g = g_h.index;
-            // std::cout << "Adding " << g+1 << " to A (" << g_h.value << "). Increasing";
+
+            // if (verbose) std::cout << "Adding " << g << " to A (" << g_h.value << "). Increasing";
+            // auto _tmp = q.top().index;
             q.pop();
+            // std::cout << "\nPopping (I) out " << _tmp << " leaving " << q.top().index << "\n";
             
+            // int ccc = 0;
             for (auto hi = handles.begin(); hi != handles.end(); ) {
-                const auto h = (*(*hi)).index;
-                if ((*(*hi)).index != g) {
-                    if (X_[g][h] > (*(*hi)).value) {
-                        // std::cout << " " << h+1 << "<{" << (*(*hi)).value << "->" << X_[g][h] << "}";
-                        (*(*hi)).value = X_[g][h];
-                        q.increase((*(*hi)).handle);
+                // std::cout << "  " << ccc++;
+                const auto h = hi->first;
+                if (h != g) {
+                    if (X_[g][h] > (*hi->second).value) {
+                        // if (verbose) std::cout << " " << h << "<{" << (*hi->second).value << "->" << X_[g][h] << "}";
+                        (*hi->second).value = X_[g][h];
+                        q.increase((*hi->second).handle);
                     }
                     hi++;
                 } else {
                     hi = handles.erase(hi);
                 }
             }
-            // std::cout << "\n";
+            // if (verbose) std::cout << "\n";
         }
         g = q.top().index;
         q.pop();
+        // std::cout << "\nPopping (II) out " << g << " leaving " << (q.empty() ? 0 : q.top().index) << "\n";
         auto t = q.empty() ? 0 : q.top().index;
         double w = 0;
-        // std::cout << "== Picked s=" << g+1 << " t=" << t+1 << " w=sum([ ";
-        for(IloInt k = 0; k < numVertices; k++) {
+        // if (verbose) std::cout << "== Picked s=" << g+1 << " t=" << t+1 << " w=sum([ ";
+        for(int k = 0; k < numVertices; k++) {
             if (group[k] != k) continue;
             w += X_[k][t];
-            // std::cout << X_[k][t] << " ";
+            // if (verbose) std::cout << X_[k][t] << " ";
         }
 
         const auto st_v = std::min(g, t), st_w = std::max(g, t);
-        for(IloInt k = 0; k < numVertices; k++) {
+        for(int k = 0; k < numVertices; k++) {
             if (group[k] != k || k == st_v || k == st_w) continue;
             X_[st_v][k] += X_[st_w][k];
             X_[k][st_v] += X_[k][st_w];
         }
-        // std::cout << "])=" << w << " ==\n\n";
+        // if (verbose) std::cout << "])=" << w << " ==\n\n";
 
         if (w < best_cut_weight) {
             best_cut_weight = w;

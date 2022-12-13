@@ -3,6 +3,56 @@
 #include "cutstsp_callbacks.h"
 #include <iostream>
 #include <cassert>
+#include <queue>
+#include <vector>
+#include <tuple>
+
+std::tuple<bool, std::string> check_valid_solution(const IloArray<IloNumArray> &x, double **mdist, double obj) {
+    const int numVertices = x.getSize();
+
+    for (int i = 0; i < numVertices; i++) {
+        int arcscc = 0;
+        for (int j = 0; j < numVertices; j++) {
+            if (i != j && (x[i][j] > 0.5 || x[j][i] > 0.5)) arcscc++;
+        }
+        if (arcscc != 2) return {false, "NUMBER OF ARCS IS INVALID " + std::to_string(i) + "#" + std::to_string(arcscc)};
+    }
+
+    std::vector<bool> visited(numVertices, false);
+    std::queue<int> q;
+    q.push(0);
+    int last = -1, vcc = 0;
+    double cost = 0;
+    while (!q.empty()) {
+        const int t = q.front();
+        vcc++;
+        visited[t] = true;
+        q.pop();
+        for (int i = 0; i < numVertices; i++) {
+            if (t != i && x[t][i] > 0.5 && i != last) {
+                cost += mdist[t][i];
+                if (i == 0) break;
+                if (visited[i]) return {false, "SUBCYCLE DETECTED"};
+                q.push(i);
+                if (t == 0) break;
+            }
+        }
+        last = t;
+    }
+    if (cost != obj) return {false, "OBJ COST INVALID"};
+    return {vcc == numVertices, "VISITED COUNT INVALID " + std::to_string(vcc)};
+}
+
+bool check_valid_solution_(IloCplex& cpl, const IloArray<IloBoolVarArray> &x, double **mdist, double obj) {
+    IloArray<IloNumArray> X_(cpl.getEnv(), x.getSize());
+    for(IloInt i = 0; i < x.getSize(); i++) {
+        X_[i] = IloNumArray(cpl.getEnv(), x.getSize());
+        cpl.getValues(X_[i], x[i]);
+    }
+    const auto a = check_valid_solution(X_, mdist, obj);
+    if (!std::get<0>(a)) std::cout << "\nWARNING: SANITY CHECK FAILURE!: " << std::get<1>(a) << std::endl;
+    return std::get<0>(a);
+}
 
 template<bool edges>
 int counting_descendent(IloEnv &env, IloCplex &model, IloArray<IloBoolVarArray> &x, int numVertices, double **mdist, int start = 0) {
@@ -121,6 +171,7 @@ double exponential_tsp(int numVertices, double **mdist) {
     std::cout << "TIME ELAPSED: " << (exptspModel.getTime()-startTime) << std::endl << std::endl << "-----" << std::endl;
 
     double thereturnis = exptspModel.getBestObjValue();
+    check_valid_solution_(exptspModel, x, mdist, thereturnis);
     env.end();
     return thereturnis;
 }
@@ -209,6 +260,7 @@ double exponential_tsp_edges(int numVertices, double **mdist, bool maxback_cut, 
     std::cout << "TIME ELAPSED: " << (exptspModel.getTime()-startTime) << std::endl << std::endl << "-----" << std::endl;
 
     double thereturnis = exptspModel.getBestObjValue();
+    check_valid_solution_(exptspModel, x, mdist, thereturnis);
     env.end();
     return thereturnis;
 }
