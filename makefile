@@ -36,7 +36,7 @@ CONCERTLIBDIR = $(CONCERTDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
 #### define o compilador
 CPPC = g++
 ifeq ($(DEBUG), 1)
-    CCOPTFLAGS = -g3 -Wall -Wextra -fno-omit-frame-pointer -fsanitize=address -fsanitize=leak -fsanitize=null -fsanitize=signed-integer-overflow
+    CCOPTFLAGS = -g3 -fno-omit-frame-pointer -fsanitize=address -fsanitize=leak -fsanitize=null -fsanitize=signed-integer-overflow
 else
     CCOPTFLAGS = -O2 -DNDEBUG
 endif
@@ -45,10 +45,10 @@ endif
 #### opcoes de compilacao e includes
 #CCOPT = $(BITS_OPTION) -O3 -g -fPIC -fexceptions -DNDEBUG -DIL_STD -std=c++0x -fpermissive
 #CCOPT = $(BITS_OPTION) -O3 -g3 -fPIC -fexceptions -DNDEBUG -DIL_STD -std=c++0x -fpermissive -fno-strict-aliasing
-CCOPT = $(BITS_OPTION) $(CCOPTFLAGS) -m64 -fPIC -fno-strict-aliasing -fexceptions -DIL_STD -std=c++17
+CCOPT = $(BITS_OPTION) $(CCOPTFLAGS) -Wall -Wextra -m64 -fPIC -fno-strict-aliasing -fexceptions -DIL_STD -std=c++17
 CONCERTINCDIR = $(CONCERTDIR)/include
 CPLEXINCDIR   = $(CPLEXDIR)/include
-CCFLAGS = $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR)
+CCFLAGS = $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR) -Isrc/tclap/include
 #############################
 
 #### flags do linker

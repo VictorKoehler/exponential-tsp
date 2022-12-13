@@ -114,9 +114,9 @@ double exponential_tsp(int numVertices, double **mdist) {
     startTime = exptspModel.getTime();
     exptspModel.solve();
 
+    std::cout << "STATUS: " <<  exptspModel.getCplexStatus() << std::endl;
     std::cout << "BEST: " <<  exptspModel.getBestObjValue() << std::endl;
     std::cout << "OBJ VALUE: " <<  exptspModel.getObjValue() << std::endl;
-    std::cout << "STATUS: " <<  exptspModel.getCplexStatus() << std::endl;
     std::cout << "VISITED: " <<  counting_descendent<false>(env, exptspModel, x, numVertices, mdist) << std::endl;
     std::cout << "TIME ELAPSED: " << (exptspModel.getTime()-startTime) << std::endl << std::endl << "-----" << std::endl;
 
@@ -127,8 +127,7 @@ double exponential_tsp(int numVertices, double **mdist) {
 
 
 
-double exponential_tsp_edges(int numVertices, double **mdist, bool stoer_wagner_cut, bool maxback_cut) {
-    std::cout << "EDGES " << stoer_wagner_cut << maxback_cut <<"\n";
+double exponential_tsp_edges(int numVertices, double **mdist, bool maxback_cut, bool stoer_wagner_cut, bool stoer_wagner_lazy, int maxdepth) {
     // Ambiente
     IloEnv env;
 
@@ -193,8 +192,9 @@ double exponential_tsp_edges(int numVertices, double **mdist, bool stoer_wagner_
 
     // Let the games begin
     IloCplex exptspModel(modelo);
-    exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices, true));
-    if (stoer_wagner_cut || maxback_cut) exptspModel.use(MINCUTTSPCALLBACK(env, x, stoer_wagner_cut, maxback_cut, 8));
+    if (stoer_wagner_lazy) exptspModel.use(SWMINCUTLAZYCALLBACK(env, x));
+    else exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices, true));
+    if (stoer_wagner_cut || maxback_cut) exptspModel.use(MINCUTTSPCALLBACK(env, x, stoer_wagner_cut, maxback_cut, maxdepth));
     exptspModel.exportModel("results/exptsp.lp");
     exptspModel.setParam(IloCplex::TiLim,60*10);
 

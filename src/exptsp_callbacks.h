@@ -2,6 +2,7 @@
 #define EXPTSP_CALLBACK_H_
 
 #include "cplex_utils.h"
+#include "stoer_wagner_mincut.hpp"
 #include <vector>
 
 /**
@@ -137,6 +138,27 @@ ILOLAZYCONSTRAINTCALLBACK3(CYCLELC_CONJCOMPL, IloArray<IloBoolVarArray> &, x, in
         }
     }
     // std::cout << std::endl << "----" << std::endl;
+}
+
+
+
+ILOLAZYCONSTRAINTCALLBACK1(SWMINCUTLAZYCALLBACK, IloArray<IloBoolVarArray> &, x) {
+    const int numVertices = x.getSize();
+    IloArray<IloNumArray> X_(getEnv(), numVertices);
+    for(IloInt i = 0; i < numVertices; i++) {
+        X_[i] = IloNumArray(getEnv(), numVertices);
+        getValues(X_[i], x[i]);
+    }
+    
+    const auto c = stoer_wagner_mincut(X_);
+    if (std::get<2>(c) >= 2 || std::get<0>(c).empty() || std::get<1>(c).empty()) return;
+    IloExpr expr(getEnv());
+    for (const auto& i : std::get<0>(c)) {
+        for (const auto& j : std::get<1>(c)) {
+            expr += x[i][j];
+        }
+    }
+    add(expr >= 2);
 }
 
 #endif
