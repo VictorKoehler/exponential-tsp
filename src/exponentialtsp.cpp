@@ -39,7 +39,7 @@ std::tuple<bool, std::string> check_valid_solution(const IloArray<IloNumArray> &
         }
         last = t;
     }
-    if (cost != obj) return {false, "OBJ COST INVALID"};
+    if (cost != obj) return {false, "OBJ COST INVALID: " + std::to_string(cost) + " != " + std::to_string(obj)};
     return {vcc == numVertices, "VISITED COUNT INVALID " + std::to_string(vcc)};
 }
 
@@ -157,20 +157,22 @@ double exponential_tsp(int numVertices, double **mdist) {
     // Let the games begin
     IloCplex exptspModel(modelo);
     exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices, false));
-    exptspModel.exportModel("results/exptsp.lp");
-    exptspModel.setParam(IloCplex::TiLim,60*10);
+    // exptspModel.exportModel("results/exptsp.lp");
+    exptspModel.setParam(IloCplex::Param::TimeLimit, 60*10);
+    exptspModel.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-06);
 
     IloNum startTime;
     startTime = exptspModel.getTime();
+    CPLEX_MUTE(exptspModel);
     exptspModel.solve();
 
     std::cout << "STATUS: " <<  exptspModel.getCplexStatus() << std::endl;
-    std::cout << "BEST: " <<  exptspModel.getBestObjValue() << std::endl;
     std::cout << "OBJ VALUE: " <<  exptspModel.getObjValue() << std::endl;
+    std::cout << "BEST: " <<  exptspModel.getBestObjValue() << std::endl;
     std::cout << "VISITED: " <<  counting_descendent<false>(env, exptspModel, x, numVertices, mdist) << std::endl;
     std::cout << "TIME ELAPSED: " << (exptspModel.getTime()-startTime) << std::endl << std::endl << "-----" << std::endl;
 
-    double thereturnis = exptspModel.getBestObjValue();
+    double thereturnis = exptspModel.getObjValue();
     check_valid_solution_(exptspModel, x, mdist, thereturnis);
     env.end();
     return thereturnis;
@@ -246,20 +248,22 @@ double exponential_tsp_edges(int numVertices, double **mdist, bool maxback_cut, 
     if (stoer_wagner_lazy) exptspModel.use(SWMINCUTLAZYCALLBACK(env, x));
     else exptspModel.use(CYCLELC_CONJCOMPL(env, x, numVertices, true));
     if (stoer_wagner_cut || maxback_cut) exptspModel.use(MINCUTTSPCALLBACK(env, x, stoer_wagner_cut, maxback_cut, maxdepth));
-    exptspModel.exportModel("results/exptsp.lp");
-    exptspModel.setParam(IloCplex::TiLim,60*10);
+    // exptspModel.exportModel("results/exptsp.lp");
+    exptspModel.setParam(IloCplex::Param::TimeLimit, 60*10);
+    exptspModel.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-06);
 
     IloNum startTime;
     startTime = exptspModel.getTime();
+    // CPLEX_MUTE(exptspModel);
     exptspModel.solve();
 
     std::cout << "STATUS: " <<  exptspModel.getCplexStatus() << std::endl;
-    std::cout << "BEST: " <<  exptspModel.getBestObjValue() << std::endl;
     std::cout << "OBJ VALUE: " <<  exptspModel.getObjValue() << std::endl;
+    std::cout << "BEST: " <<  exptspModel.getBestObjValue() << std::endl;
     std::cout << "VISITED: " <<  counting_descendent<true>(env, exptspModel, x, numVertices, mdist) << std::endl;
     std::cout << "TIME ELAPSED: " << (exptspModel.getTime()-startTime) << std::endl << std::endl << "-----" << std::endl;
 
-    double thereturnis = exptspModel.getBestObjValue();
+    double thereturnis = exptspModel.getObjValue();
     check_valid_solution_(exptspModel, x, mdist, thereturnis);
     env.end();
     return thereturnis;
